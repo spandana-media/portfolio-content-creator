@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CC — Storybook Portfolio</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper: #f7f3ea;
+    --paper-edge: #e6dfd0;
+    --bg1:#f0e9dc;
+    --bg2:#f9f6f0;
+    --ink:#3a2f2f;
+    --muted:#7a6f6f;
+    --accent:#372b0d;
+    --gold:#bfa75a;
+    --shadow: 0 20px 50px rgba(0,0,0,.12);
+    --book-w: 420px;
+    --book-h: 640px;
+    --gutter: 22px;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background: linear-gradient(180deg, var(--bg1), var(--bg2));
+    font-family:'Inter', sans-serif;
+    overflow-x:hidden;
+    position: relative;
+    color: var(--ink);
+  }
+
+  /* Vintage paper texture overlay */
+  .page, .cover {
+    background-color: var(--paper);
+    background-image:
+      url('https://www.transparenttextures.com/patterns/pw-maze-white.png'),
+      linear-gradient(135deg, #f7f3ea 0%, #f0e9dc 100%);
+    background-blend-mode: multiply;
+  }
+
+  /* --- Butterfly BG floating effect --- */
+  .butterfly{
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    background-image: url("https://cdn-icons-png.flaticon.com/512/616/616408.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    animation: floaty 18s linear infinite;
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.15));
+    z-index: 15;
+  }
+  .butterfly:nth-child(1){ top:20%; left:5%; animation-duration:20s; }
+  .butterfly:nth-child(2){ top:60%; left:90%; animation-duration:25s; }
+  .butterfly:nth-child(3){ top:80%; left:30%; animation-duration:22s; }
+
+  @keyframes floaty {
+    0% { transform: translateY(0) rotate(0deg); opacity:0.5; }
+    50% { transform: translateY(-120px) rotate(20deg); opacity:1; }
+    100% { transform: translateY(0) rotate(0deg); opacity:0.5; }
+  }
+
+  /* Flowers */
+  .flower {
+    position: fixed;
+    width: 30px; height: 30px;
+    background: linear-gradient(45deg, #d9b382, #c9a15a);
+    border-radius: 50%;
+    opacity: 0.7;
+    animation: floatFlower 25s infinite ease-in-out;
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.1));
+    z-index: 15;
+  }
+  .flower::before {
+    content: '';
+    position: absolute;
+    width: 15px; height: 40px;
+    background: #8a7a4f;
+    border-radius: 20px;
+    bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .petal {
+    position: absolute;
+    width: 15px; height: 15px;
+    background: inherit;
+    border-radius: 50%;
+  }
+  .petal:nth-child(1) { top: -5px; left: 50%; transform: translateX(-50%); }
+  .petal:nth-child(2) { top: 5px; right: -5px; }
+  .petal:nth-child(3) { bottom: 5px; right: -5px; }
+  .petal:nth-child(4) { bottom: -5px; left: 50%; transform: translateX(-50%); }
+  .petal:nth-child(5) { bottom: 5px; left: -5px; }
+  .petal:nth-child(6) { top: 5px; left: -5px; }
+  @keyframes floatFlower {
+    0%,100% { transform: translate(0,0) rotate(0deg); opacity: 0.7; }
+    50% { transform: translate(30px,-20px) rotate(180deg); opacity: 0.9; }
+  }
+
+  .scroll-track{ --steps: 7; height: calc((var(--steps) + 1) * 85vh); position: relative; z-index: 10; }
+  .book-center{ position: sticky; top: 50%; transform: translateY(-50%); display:flex; justify-content:center; align-items:center; pointer-events:none; z-index: 20; }
+  .book-wrapper{ width: min(var(--book-w), 86vw); height: min(var(--book-h), 130vw); max-height: 75vh; perspective: 1800px; filter: drop-shadow(var(--shadow)); position: relative; }
+  .book{ position:relative; width:100%; height:100%; transform-style: preserve-3d; border-radius: 18px; box-shadow: inset 10px 0 20px rgba(0,0,0,0.05), inset -10px 0 20px rgba(0,0,0,0.05); background: linear-gradient(90deg, #fefcf7 0%, #f7f3ea 100%); }
+
+  .page{ position:absolute; inset:0; background: var(--paper); border-radius: 18px; transform-origin: left center; backface-visibility: hidden; box-shadow: 0 1px 0 var(--paper-edge) inset, 0 0 0 1px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,0.07); padding: 28px 28px 28px calc(var(--gutter) + 18px); display:flex; flex-direction:column; overflow:hidden; transition: box-shadow 0.3s ease; }
+  .page::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 12px; border-radius: 18px 0 0 18px; background: linear-gradient(90deg, rgba(255 255 255 / 0.6), transparent); pointer-events: none; z-index: 5; }
+  .page-footer{ margin-top:auto; font-size:12px; color:var(--muted); letter-spacing:.04em; border-top:1px solid rgba(0,0,0,.06); padding-top:10px; user-select:none; }
+
+  .cover{ background: linear-gradient(135deg, #f3e9d2, #fefcf7); border: 2px solid rgba(0,0,0,.06); position:absolute; inset:0; transform-origin: left center; box-shadow: inset 0 0 0 3px var(--gold), 0 12px 40px rgba(0,0,0,0.12); }
+  .cover::before{ content:""; position:absolute; inset:0; background: radial-gradient(1200px 200px at -200px 50%, rgba(0,0,0,.06), transparent 60%), conic-gradient(from 90deg at 20% 50%, #fff9e6, #f0e9d7, #f6f3ec, #fff9e6); opacity:.6; border-radius: inherit; pointer-events:none; }
+  .cover-inner{ position:absolute; inset:14px; border-radius: 14px; outline: 6px double var(--gold); outline-offset: -12px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding: 24px; user-select:none; }
+  .cover h1{ font-family: 'Playfair Display', serif; font-size: clamp(28px, 4.2vw, 42px); margin:0 0 10px 0; letter-spacing:.02em; text-shadow: 0 1px 2px rgba(0,0,0,0.1); color: #5a4a1a; }
+  .cover .subtitle{ color:var(--muted); font-size:14px; font-weight: 500; }
+  .cover .hint{ margin-top:18px; font-size:12px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+  .cover .open-btn{ margin-top:22px; padding:10px 16px; border-radius: 12px; border:1px solid rgba(0,0,0,.1); background:#fff; color:var(--accent); font-weight:600; cursor:pointer; transition: transform .2s, box-shadow .2s, background .2s; }
+  .cover .open-btn:hover{ transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.08); background:#fafafa; }
+
+  h2{ font-family:'Playfair Display', serif; font-weight:700; font-size: clamp(22px, 3vw, 28px); margin: 6px 0 10px 0; color: #5a4a1a; }
+  p, li{ font-size: 15px; line-height: 1.65; color:#4a423a; }
+
+  .avatar-box{
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+  }
+  .avatar-box img{
+    width:400px;
+    max-width:100%;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+  }
+
+  .mock{
+    width:100%;
+    height:160px;
+    border-radius:14px;
+    background: linear-gradient(180deg, #fff9e6, #f1e8c8);
+    border:1px solid rgba(0,0,0,.06);
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:var(--muted);
+    margin:12px 0 4px 0;
+  }
+  .btn{
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.1);
+    background:#fff;
+    color:var(--accent);
+    font-weight:600;
+    text-decoration:none;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.08) }
+/* Avatar consistency (chibi art style images) */
+.avatar-box img {
+  width: 260px;
+  max-width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  background: #fff9e6;
+  padding: 10px;
+}
+
+/* Projects gallery */
+.project-gallery {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+
+.project-gallery img:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+.mock img {
+  max-width: 180px;   /* same size as other chibis */
+  height: auto;
+  display: block;
+  margin: 15px auto;  /* center it nicely */
+  border: 2px solid #ddd;  /* thin border instead of huge bg */
+  border-radius: 12px;
+  background: white;  /* clean look */
+  padding: 5px;
+}
+
+/* Adjust mock container so it fits both images */
+.mock {
+  flex-direction: column;
+  padding: 10px;
+  height: auto;
+}
+#projects {
+  text-align: center;
+  margin: 40px auto;
+  max-width: 900px;
+}
+
+.project-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+}
+
+.page-content {
+  position: relative;
+  z-index: 5;
+}
+
+.page-content a {
+  z-index: 10;
+  position: relative;
+  pointer-events: auto;
+  color: #211303;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page-content a:hover {
+  text-decoration: underline;
+}
+
+<style>
+  :root{
+    --paper: #f7f3ea;
+    --paper-edge: #e6dfd0;
+    --bg1:#f0e9dc;
+    --bg2:#f9f6f0;
+    --ink:#3a2f2f;
+    --muted:#7a6f6f;
+    --accent:#372b0d;
+    --gold:#bfa75a;
+    --shadow: 0 20px 50px rgba(0,0,0,.12);
+    --book-w: 420px;
+    --book-h: 640px;
+    --gutter: 22px;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background: linear-gradient(180deg, var(--bg1), var(--bg2));
+    font-family:'Inter', sans-serif;
+    overflow-x:hidden;
+    position: relative;
+    color: var(--ink);
+  }
+
+  /* Vintage paper texture overlay */
+  .page, .cover {
+    background-color: var(--paper);
+    background-image:
+      url('https://www.transparenttextures.com/patterns/pw-maze-white.png'),
+      linear-gradient(135deg, #f7f3ea 0%, #f0e9dc 100%);
+    background-blend-mode: multiply;
+  }
+
+  /* --- Butterfly BG floating effect --- */
+  .butterfly{
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    background-image: url("https://cdn-icons-png.flaticon.com/512/616/616408.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    animation: floaty 18s linear infinite;
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.15));
+    z-index: 15;
+  }
+  .butterfly:nth-child(1){ top:20%; left:5%; animation-duration:20s; }
+  .butterfly:nth-child(2){ top:60%; left:90%; animation-duration:25s; }
+  .butterfly:nth-child(3){ top:80%; left:30%; animation-duration:22s; }
+
+  @keyframes floaty {
+    0% { transform: translateY(0) rotate(0deg); opacity:0.5; }
+    50% { transform: translateY(-120px) rotate(20deg); opacity:1; }
+    100% { transform: translateY(0) rotate(0deg); opacity:0.5; }
+  }
+
+  /* Flowers */
+  .flower {
+    position: fixed;
+    width: 30px; height: 30px;
+    background: linear-gradient(45deg, #d9b382, #c9a15a);
+    border-radius: 50%;
+    opacity: 0.7;
+    animation: floatFlower 25s infinite ease-in-out;
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.1));
+    z-index: 15;
+  }
+  .flower::before {
+    content: '';
+    position: absolute;
+    width: 15px; height: 40px;
+    background: #8a7a4f;
+    border-radius: 20px;
+    bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .petal {
+    position: absolute;
+    width: 15px; height: 15px;
+    background: inherit;
+    border-radius: 50%;
+  }
+  .petal:nth-child(1) { top: -5px; left: 50%; transform: translateX(-50%); }
+  .petal:nth-child(2) { top: 5px; right: -5px; }
+  .petal:nth-child(3) { bottom: 5px; right: -5px; }
+  .petal:nth-child(4) { bottom: -5px; left: 50%; transform: translateX(-50%); }
+  .petal:nth-child(5) { bottom: 5px; left: -5px; }
+  .petal:nth-child(6) { top: 5px; left: -5px; }
+  @keyframes floatFlower {
+    0%,100% { transform: translate(0,0) rotate(0deg); opacity: 0.7; }
+    50% { transform: translate(30px,-20px) rotate(180deg); opacity: 0.9; }
+  }
+
+  .scroll-track{ --steps: 7; height: calc((var(--steps) + 1) * 85vh); position: relative; z-index: 10; }
+  .book-center{ position: sticky; top: 50%; transform: translateY(-50%); display:flex; justify-content:center; align-items:center; pointer-events:none; z-index: 20; }
+  .book-wrapper{ width: min(var(--book-w), 86vw); height: min(var(--book-h), 130vw); max-height: 75vh; perspective: 1800px; filter: drop-shadow(var(--shadow)); position: relative; }
+  .book{ position:relative; width:100%; height:100%; transform-style: preserve-3d; border-radius: 18px; box-shadow: inset 10px 0 20px rgba(0,0,0,0.05), inset -10px 0 20px rgba(0,0,0,0.05); background: linear-gradient(90deg, #fefcf7 0%, #f7f3ea 100%); }
+
+  .page{ position:absolute; inset:0; background: var(--paper); border-radius: 18px; transform-origin: left center; backface-visibility: hidden; box-shadow: 0 1px 0 var(--paper-edge) inset, 0 0 0 1px rgba(0,0,0,.04), 0 8px 20px rgba(0,0,0,0.07); padding: 28px 28px 28px calc(var(--gutter) + 18px); display:flex; flex-direction:column; overflow:hidden; transition: box-shadow 0.3s ease; }
+  .page::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 12px; border-radius: 18px 0 0 18px; background: linear-gradient(90deg, rgba(255 255 255 / 0.6), transparent); pointer-events: none; z-index: 5; }
+  .page-footer{ margin-top:auto; font-size:12px; color:var(--muted); letter-spacing:.04em; border-top:1px solid rgba(0,0,0,.06); padding-top:10px; user-select:none; }
+
+  .cover{ background: linear-gradient(135deg, #f3e9d2, #fefcf7); border: 2px solid rgba(0,0,0,.06); position:absolute; inset:0; transform-origin: left center; box-shadow: inset 0 0 0 3px var(--gold), 0 12px 40px rgba(0,0,0,0.12); }
+  .cover::before{ content:""; position:absolute; inset:0; background: radial-gradient(1200px 200px at -200px 50%, rgba(0,0,0,.06), transparent 60%), conic-gradient(from 90deg at 20% 50%, #fff9e6, #f0e9d7, #f6f3ec, #fff9e6); opacity:.6; border-radius: inherit; pointer-events:none; }
+  .cover-inner{ position:absolute; inset:14px; border-radius: 14px; outline: 6px double var(--gold); outline-offset: -12px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding: 24px; user-select:none; }
+  .cover h1{ font-family: 'Playfair Display', serif; font-size: clamp(28px, 4.2vw, 42px); margin:0 0 10px 0; letter-spacing:.02em; text-shadow: 0 1px 2px rgba(0,0,0,0.1); color: #5a4a1a; }
+  .cover .subtitle{ color:var(--muted); font-size:14px; font-weight: 500; }
+  .cover .hint{ margin-top:18px; font-size:12px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+  .cover .open-btn{ margin-top:22px; padding:10px 16px; border-radius: 12px; border:1px solid rgba(0,0,0,.1); background:#fff; color:var(--accent); font-weight:600; cursor:pointer; transition: transform .2s, box-shadow .2s, background .2s; }
+  .cover .open-btn:hover{ transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.08); background:#fafafa; }
+
+  h2{ font-family:'Playfair Display', serif; font-weight:700; font-size: clamp(22px, 3vw, 28px); margin: 6px 0 10px 0; color: #5a4a1a; }
+  p, li{ font-size: 15px; line-height: 1.65; color:#4a423a; }
+
+  .avatar-box{
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+  }
+  .avatar-box img{
+    width:400px;
+    max-width:100%;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    
+  }
+
+  .mock{
+    width:100%;
+    height:160px;
+    border-radius:14px;
+    background: linear-gradient(180deg, #fff9e6, #f1e8c8);
+    border:1px solid rgba(0,0,0,.06);
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:var(--muted);
+    margin:12px 0 4px 0;
+  }
+  .btn{
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.1);
+    background:#fff;
+    color:var(--accent);
+    font-weight:600;
+    text-decoration:none;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.08) }
+/* Avatar consistency (chibi art style images) */
+.avatar-box img {
+  width: 260px;
+  max-width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  background: #fff9e6;
+  padding: 10px;
+ 
+}
+
+.avatar-small img{
+   
+    max-width:100%;
+    border-radius:14px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    width: 160px;
+    height:120px;
+   padding: 10px
+  }
+
+/* Projects gallery */
+.project-gallery {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+
+.project-gallery img:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+.mock img {
+  max-width: 180px;   /* same size as other chibis */
+  height: auto;
+  display: block;
+  margin: 15px auto;  /* center it nicely */
+  border: 2px solid #ddd;  /* thin border instead of huge bg */
+  border-radius: 12px;
+  background: white;  /* clean look */
+  padding: 5px;
+}
+
+/* Adjust mock container so it fits both images */
+.mock {
+  flex-direction: column;
+  padding: 10px;
+  height: auto;
+}
+#projects {
+  text-align: center;
+  margin: 40px auto;
+  max-width: 900px;
+}
+
+.project-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+}
+
+.page-content {
+  position: relative;
+  z-index: 5;
+}
+
+.page-content a {
+  z-index: 10;
+  position: relative;
+  pointer-events: auto;
+  color: #211303;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page-content a:hover {
+  text-decoration: underline;
+}
+.page-content  .mock {
+    background: #f4f0e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding:15px;
+
+display:inline-block;
+margin-top: 20px; 
+
+
+
+}
+
+
+</style>
+</head>
+<body>
+
+<!-- Floating butterflies -->
+<div class="butterfly"></div>
+<div class="butterfly"></div>
+<div class="butterfly"></div>
+
+<!-- Floating flowers -->
+<div class="flower" style="top: 15%; left: 10%; animation-delay: 0s;">
+  <div class="petal"></div><div class="petal"></div><div class="petal"></div>
+  <div class="petal"></div><div class="petal"></div><div class="petal"></div>
+</div>
+<div class="flower" style="top: 70%; right: 12%; animation-delay: 5s;">
+  <div class="petal"></div><div class="petal"></div><div class="petal"></div>
+  <div class="petal"></div><div class="petal"></div><div class="petal"></div>
+</div>
+
+<div class="scroll-track" id="scrollTrack">
+  <div class="book-center">
+    <div class="book-wrapper">
+      <div class="book" id="book">
+
+        <!-- COVER -->
+        <section class="cover page" data-page="0">
+          <div class="cover-inner">
+            <h1>The Storybook of Anonymous</h1>
+            <div class="subtitle">A minimal portfolio in pages</div>
+            <div class="hint">Scroll to turn pages</div>
+            <button class="open-btn" id="openBtn">---></button>
+          </div>
+        </section>
+
+        <!-- PAGE 1 -->
+        <section class="page" data-page="1">
+          <div class="page-content">
+            <h2>Hi!</h2>
+            <p class="lede">Welcome to my calm corner on the internet — soft colors, clean layout, and little details that feel like a keepsake book.</p>
+            <div class="avatar-box">
+              <img src="intro.jpeg" alt="Chibi Avatar of Spandana" />
+            </div>
+          </div>
+          <div class="page-footer">1</div>
+        </section>
+
+        <!-- PAGE 2 -->
+        <section class="page" data-page="4">
+  <div class="page-content">
+    <h2>Content Creator</h2>
+    <p>I create fun & engaging videos — a mix of miniatures, stickman comedy, and storytelling shorts 🌸</p>
+
+    <div class="avatar-box">
+      <img src="Chibi content.png" alt="Content Chibi">
+    </div>
+  </div>
+          <div class="page-footer">2</div>
+        </section>
+
+        <!-- PAGE 3 -->
+        <section class="page" data-page="2">
+  <div class="page-content">
+    <h2>About Me</h2>
+    <p>Hi, I'm Content Creator! A storyteller who loves blending imagination, emotions, and creativity ✨</p>
+
+    <div class="avatar-box">
+      <img src="Chibi about.png" alt="About Chibi">
+    </div>
+  </div>
+          <div class="page-footer">3</div>
+        </section>
+
+        <!-- PAGE 4 -->
+        <section class="page" data-page="4">
+          <div class="page-content">
+            <h2>Skills</h2>
+            <ul>
+              <li>Editing: VN, CapCut</li>
+              <li>Design: Canva (thumbnails, layouts)</li>
+              <li>Workflow: Scripting, voice, light animation</li>
+              <li>Assist: ElevenLabs & GPT when useful</li>
+            </ul>
+             <div class="avatar-box">
+      <img src="Chibi sk.png" alt="Skills Chibi">
+    </div>
+          </div>
+          <div class="page-footer">4</div>
+        </section>
+
+        <!-- PAGE 5 -->
+        <section class="page" data-page="5">
+  <div class="page-content">
+    <h2>Projects</h2>
+
+    <p><strong>SpanyTales</strong> — animated stories & gaming bits (Meowi!).</p>
+    <a href="https://youtube.com/@stales-s6t?si=k3aK3ihb2dKtvDkJ" target="_blank" rel="noopener noreferrer">
+      Click here! - To Visit Channel
+    </a>
+
+    <p><strong>The Quiet Page</strong> — faceless, introspective shorts.</p>
+    <a href="https://youtube.com/@ytquietpage?si=WtTduCXLFI2xYZkW" target="_blank" rel="noopener noreferrer">
+      Click here!
+    </a>
+
+    <div class="avatar-box avatar-small img">
+      <img src="chibi pro.png" alt="Project Chibi" />
+    </div>
+  </div>
+  <div class="page-footer">5</div>
+</section>
+
+
+        <!-- PAGE 6 -->
+        <!-- PAGE 6 - Contact -->
+<section class="page" data-page="6">
+  <div class="page-content">
+    <h2>Contact</h2>
+    
+<p>Email:   <!-- Email -->
+<a href="mailto: spantale360@gmail.com">spantale360@gmail.com</a> | 
+<a href="mailto: ytquietpage@gmail.com">ytquietpage@gmail.com</a></p> 
+
+   
+
+    <div class="avatar-box">
+      <img src="Chibi contact.png" alt="Contact Chibi">
+    </div>
+  </div>
+  <div class="page-footer">6</div>
+</section>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const track = document.getElementById('scrollTrack');
+  const pages = Array.from(document.querySelectorAll('.book .page'))
+                      .sort((a,b)=> (+a.dataset.page) - (+b.dataset.page));
+  const openBtn = document.getElementById('openBtn');
+  const totalPages = pages.length - 1;
+  pages.forEach((p, i)=>{ p.style.zIndex = String(1000 - i); p.style.transform = 'rotateY(0deg)'; });
+  const clamp = (v, min, max)=> Math.min(Math.max(v, min), max);
+  function update(){
+    const scrollTop = window.scrollY - track.offsetTop;
+    const usable = Math.max(1, track.offsetHeight - window.innerHeight);
+    const progress = clamp(scrollTop / usable, 0, 1);
+    const idxFloat = progress * totalPages;
+    pages.forEach((p, i)=>{
+      const turn = clamp(idxFloat - i, 0, 1);
+      const angle = -180 * turn;
+      const zBump = (1 - turn) * 0.1;
+      p.style.transform = `translateZ(${zBump}px) rotateY(${angle}deg)`;
+      p.style.zIndex = String(1000 - i - Math.floor(turn*2));
+    });
+  }
+  openBtn.addEventListener('click', ()=> window.scrollTo({ top: track.offsetTop + window.innerHeight * 0.35, behavior: 'smooth' }));
+  window.addEventListener('scroll', update, { passive:true });
+  window.addEventListener('resize', update);
+  document.addEventListener('DOMContentLoaded', update);
+  update();
+})();
+</script>
+
+</body>
+</html>
